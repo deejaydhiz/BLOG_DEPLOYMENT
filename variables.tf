@@ -48,3 +48,26 @@ variable "sg_name" {
   type        = string
   default     = "blog_SG"
 }
+
+variable "db_name" {  
+  description = "The name of the database to create"
+  type        = string
+  default     = "blog_db"
+}
+
+variable "db_username" {
+  description = "The master username at time of database creation"
+  type        = string
+  default     = "admin"
+}
+
+variable "db_password" {
+  description   = "The master password for the database, must be at least 8 characters"
+  type           = string
+  sensitive     = true
+
+  validation {
+    condition     = length(var.db_password) >= 8
+    error_message = "The database password must be at least 8 characters long."
+  }
+}
