@@ -13,3 +13,7 @@ output "master_secret" {
 output "db_endpoint" {
   value = aws_db_instance.blog_db.endpoint
 }
+
+output "efs_id" {
+  value = aws_efs_file_system.blog_efs.id
+}
