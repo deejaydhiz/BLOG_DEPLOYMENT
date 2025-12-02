@@ -6,54 +6,52 @@
   tags        = var.tags
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_http" {
+resource "aws_security_group_rule" "sg_rules" {
+
+  # Convert the list into a map where the key is the description of the rule
+  for_each = { for rule in var.security_group_rules : rule.description => rule }
   security_group_id = aws_security_group.blog_sg.id
-  description = "Allow http access"
-  cidr_ipv4   = "0.0.0.0/0"
-  from_port   = 80
-  ip_protocol = "tcp"
-  to_port     = 80
+  # Access individual attributes of the current rule using 'each.value'
+  type        = each.value.type
+  from_port   = each.value.from_port
+  to_port     = each.value.to_port
+  protocol    = each.value.protocol
+  cidr_blocks = each.value.cidr_blocks
+  description = each.value.description
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_https" {
+resource "aws_security_group_rule" "ssh_rule" {
+  for_each = { for rule in var.security_group_rules : rule.description => rule if rule.description == "Allow SSH from VPC only" }
   security_group_id = aws_security_group.blog_sg.id
-  description = "Allow https access"
-  cidr_ipv4   = "0.0.0.0/0"
-  from_port   = 443
-  ip_protocol = "tcp"
-  to_port     = 443
+  # Access individual attributes of the current rule using 'each.value'
+  type        = each.value.type
+  from_port   = each.value.from_port
+  to_port     = each.value.to_port
+  protocol    = each.value.protocol
+  cidr_blocks = ["${chomp(data.http.my_public_ip.response_body)}/32"]
+  description = each.value.description
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_rds" {
+resource "aws_security_group_rule" "rds_rule" {
+  for_each = { for rule in var.security_group_rules : rule.description => rule if rule.description == "Allow RDS access from VPC" }
   security_group_id = aws_security_group.blog_sg.id
-  description = "Allow RDS connection access"
-  cidr_ipv4   = data.aws_vpc.selected.cidr_block
-  from_port   = 3306
-  ip_protocol = "tcp"
-  to_port     = 3306
+  # Access individual attributes of the current rule using 'each.value'
+  type        = each.value.type
+  from_port   = each.value.from_port
+  to_port     = each.value.to_port
+  protocol    = each.value.protocol
+  cidr_blocks = [data.aws_vpc.selected.cidr_block]
+  description = each.value.description
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_nfs" {
+resource "aws_security_group_rule" "efs_rule" {
+  for_each = { for rule in var.security_group_rules : rule.description => rule if rule.description == "Allow EFS access from VPC" }
   security_group_id = aws_security_group.blog_sg.id
-  description = "Allow EFS access"
-  cidr_ipv4   = data.aws_vpc.selected.cidr_block
-  from_port   = 2049
-  ip_protocol = "tcp"
-  to_port     = 2049
-}
-
-resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
-  security_group_id = aws_security_group.blog_sg.id
-  description = "Allow SSH access"
-  cidr_ipv4   = data.aws_vpc.selected.cidr_block
-  from_port   = 22
-  ip_protocol = "tcp"
-  to_port     = 22
-}
-
-resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
-  security_group_id = aws_security_group.blog_sg.id
-  description = "Allow all outbound traffic"
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1" # semantically equivalent to all ports
+  # Access individual attributes of the current rule using 'each.value'
+  type        = each.value.type
+  from_port   = each.value.from_port
+  to_port     = each.value.to_port
+  protocol    = each.value.protocol
+  cidr_blocks = [data.aws_vpc.selected.cidr_block]
+  description = each.value.description
 }

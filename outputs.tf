@@ -2,18 +2,18 @@ output "security_group_id" {
   value = aws_security_group.blog_sg.id
 }
 
-output "master_user" {
-  value = var.db_username
+output "rds_endpoint" {
+  value = aws_db_instance.blog_db.address
 }
 
-output "master_secret" {
-  value = aws_db_instance.blog_db.master_user_secret
+output "efs_dns" {
+  value = aws_efs_file_system.blog_efs.dns_name
 }
 
-output "db_endpoint" {
-  value = aws_db_instance.blog_db.endpoint
+output "load_balancer_dns" {
+  value = aws_lb.blog_lb.dns_name
 }
 
-output "efs_id" {
-  value = aws_efs_file_system.blog_efs.id
+output "blog_url" {
+  value = aws_route53_record.blog_dns.fqdn
 }
