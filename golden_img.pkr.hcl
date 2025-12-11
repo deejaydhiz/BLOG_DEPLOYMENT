@@ -7,13 +7,12 @@ variable "aws_instance_type" {
 }
 
 variable "ami_name" {
-  default = "deji-blog-ami-1"
+  default = "deji-blog-ami-15"
 }
 
 variable "component" {
   default = "blog"
 }
-
 
 variable "aws_accounts" {
   type = list(string)
