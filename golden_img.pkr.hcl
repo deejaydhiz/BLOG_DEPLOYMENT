@@ -1,4 +1,4 @@
-variable "aws_source_ami" {
+variable "aws_base_ami" {
   default = "al2023-ami-2023*-x86_64"
 }
 
@@ -7,7 +7,7 @@ variable "aws_instance_type" {
 }
 
 variable "ami_name" {
-  default = "deji-blog-ami-15"
+  default = "deji-blog-ami-1"
 }
 
 variable "component" {
@@ -15,7 +15,7 @@ variable "component" {
 }
 
 variable "aws_accounts" {
-  type = list(string)
+  type    = list(string)
   # default = ["651974166650", "055081916963"]
   default = ["186769093804"]
 }
@@ -40,10 +40,10 @@ packer {
 
 data "amazon-ami" "source_ami" {
   filters = {
-    name = "${var.aws_source_ami}"
+    name = "${var.aws_base_ami}"
   }
   most_recent = true
-  owners      = ["336528460023", "amazon"]
+  owners      = ["186769093804", "amazon"]
   region      = "${var.aws_region}"
 }
 
