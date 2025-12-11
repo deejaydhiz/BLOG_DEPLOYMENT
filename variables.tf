@@ -104,5 +104,5 @@ variable "private_subnet_cidr" {
 }
 
 variable "ami_name" {
-  default = "deji-stack-ami"
+  default = "deji-blog-ami-1"
 }
