@@ -7,7 +7,7 @@ variable "aws_instance_type" {
 }
 
 variable "ami_name" {
-  default = "deji-stack-ami"
+  default = "deji-blog-ami-1"
 }
 
 variable "component" {
@@ -18,7 +18,7 @@ variable "component" {
 variable "aws_accounts" {
   type = list(string)
   # default = ["651974166650", "055081916963"]
-  default = ["186769093804", "055081916963"]
+  default = ["186769093804"]
 }
 
 variable "ami_regions" {
