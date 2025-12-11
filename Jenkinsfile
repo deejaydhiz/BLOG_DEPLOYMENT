@@ -3,7 +3,7 @@ pipeline {
 
   parameters {
     credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_aut', name: 'AWS', required: false
-    booleanParam(name: 'BUILD_AMI', defaultValue: false)
+    booleanParam(name: 'BUILD_AMI', defaultValue: true)
     booleanParam(name: 'DESTROY', defaultValue: false)
     string defaultValue: 'DEJI', name: 'RUNNER'
   }
