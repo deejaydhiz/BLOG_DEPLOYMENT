@@ -15,7 +15,7 @@ pipeline {
   stages {
     stage('Packer AMI Build'){
       when {
-        expression { params.BUILD_PACKER_IMG }
+        expression { params.BUILD_AMI }
       }
       steps {
         withCredentials([
