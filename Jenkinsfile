@@ -3,6 +3,7 @@ pipeline {
 
   parameters {
     credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_aut', name: 'AWS', required: false
+    booleanParam(name: 'DESTROY', defaultValue: false)
   }
 
   environment {
@@ -55,7 +56,18 @@ pipeline {
       }
     }
 
+    stage('Terraform Destroy Approval') { 
+      steps { 
+        script { 
+          input(message: 'Destroy Terraform build?')
+        } 
+      } 
+    }
+
     stage('Terraform Destroy'){
+      when {
+        expression { params.DESTROY }
+      }
       steps {
         withCredentials([
           [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
