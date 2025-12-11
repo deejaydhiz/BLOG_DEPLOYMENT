@@ -14,7 +14,6 @@ pipeline {
     stage('Initial Deployment Approval') {
       steps {
         script {
-          // def userInput = input(id: 'initial_confirm', message: 'Start Pipeline?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Start Pipeline', name: 'confirm'] ])
           input(message: 'Start Pipeline?')
         }
       }
@@ -54,14 +53,6 @@ pipeline {
           slackSend (color: '#FFFF00', message: "FINISHED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
         } 
       }
-    }
-
-    stage('Terraform Destroy Approval') { 
-      steps { 
-        script { 
-          input(message: 'Destroy Terraform build?')
-        } 
-      } 
     }
 
     stage('Terraform Destroy'){

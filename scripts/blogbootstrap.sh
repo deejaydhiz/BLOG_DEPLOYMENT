@@ -34,7 +34,7 @@ DB_HOST=$(aws ssm get-parameter --name "blogdb-host" --query "Parameter.Value" -
 DB_NAME=$(aws ssm get-parameter --name "blogdb-name" --query "Parameter.Value" --output text)
 DB_USER=$(aws ssm get-parameter --name "blogdb-user" --query "Parameter.Value" --output text)
 DB_PASS=$(aws ssm get-parameter --name "blogdb-pass" --query "Parameter.Value" --output text)
-BLOG_DNS=$(aws ssm get-parameter --name "blog-DNS" --query "Parameter.Value" --output text)
+BLOG_DNS=$(aws ssm get-parameter --name "blogdb-DNS" --query "Parameter.Value" --output text)
 ADMIN=$(aws ssm get-parameter --name "blog_admin_pw" --query "Parameter.Value" --output text)
 
 if [ ! -f "/var/www/html/wp-config.php" ]   # Check if WordPress is not already configured
@@ -64,8 +64,8 @@ else
     echo "WordPress is already configured on this server."
 
     mysql -u "${DB_USER}" -p"${DB_PASS}" -h "${DB_HOST}" -D "${DB_NAME}" << EOF
-        UPDATE wp_options SET option_value = "${BLOG_DNS}" WHERE option_id = siteurl;
-        UPDATE wp_options SET option_value = "${BLOG_DNS}" WHERE option_id = home;
+        UPDATE wp_options SET option_value = "${BLOG_DNS}" WHERE option_id = 2;
+        UPDATE wp_options SET option_value = "${BLOG_DNS}" WHERE option_id = 3;
 EOF
 fi
 
