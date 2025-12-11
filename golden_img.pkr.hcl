@@ -7,7 +7,7 @@ variable "aws_instance_type" {
 }
 
 variable "ami_name" {
-  default = "deji-blog-ami-1"
+  default = "deji-stack-ami-1"
 }
 
 variable "component" {

@@ -25,7 +25,7 @@ pipeline {
           sh '''
           packer init -upgrade .
           packer validate golden_img.pkr.hcl
-          sed -i "s/deji-blog-ami-[0-9]*/deji-blog-ami-${BUILD_NUMBER}/" ./golden_img.pkr.hcl
+          sed -i "s/deji-stack-ami-[0-9]*/deji-stack-ami-${BUILD_NUMBER}/" ./golden_img.pkr.hcl
           export PACKER_LOG=1
           export PACKER_LOG_PATH=$WORKSPACE/packer.log
           /usr/bin/packer build -force golden_img.pkr.hcl 
