@@ -3,7 +3,7 @@ pipeline {
 
   parameters {
     credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_aut', name: 'AWS', required: false
-    booleanParam(name: 'BUILD_PACKER_IMG', defaultValue: false)
+    booleanParam(name: 'BUILD_AMI', defaultValue: false)
     booleanParam(name: 'DESTROY', defaultValue: false)
     string defaultValue: 'DEJI', name: 'RUNNER'
   }
@@ -13,29 +13,25 @@ pipeline {
   }
 
   stages {
-    stage('Initial Deployment Approval') {
+    stage('Packer AMI Build'){
+      when {
+        expression { params.BUILD_PACKER_IMG }
+      }
       steps {
-        script {
-          input(message: 'Start Pipeline?')
+        withCredentials([
+          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+        ]) {
+          slackSend (color: '#ffae00ff', message: "STARTING PACKER IMAGE BUILD: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). Initiated by ${params.RUNNER}")
+          sh '''
+          packer init -upgrade .
+          packer validate golden_img.pkr.hcl
+          sed -i "s/deji-blog-ami-'[0-9]*$'/deji-blog-ami-'${BUILD_NUMBER}'/" ./golden_img.pkr.hcl
+          export PACKER_LOG=1
+          export PACKER_LOG_PATH=$WORKSPACE/packer.log
+          /usr/bin/packer build -force golden_img.pkr.hcl 
+          '''    
         }
       }
-    }
-
-    stage('Packer AMI Build'){
-        when {
-            expression { params.BUILD_PACKER_IMG }
-        }
-        steps {
-            slackSend (color: '#ffae00ff', message: "STARTING PACKER IMAGE BUILD: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). Initiated by ${params.RUNNER}")
-            sh '''
-            packer init -upgrade .
-            packer validate golden_img.pkr.hcl
-            sed -i "s/deji-blog-ami-'[0-9]*$'/deji-blog-ami-'${BUILD_NUMBER}'/" ./golden_img.pkr.hcl
-            export PACKER_LOG=1
-            export PACKER_LOG_PATH=$WORKSPACE/packer.log
-            /usr/bin/packer build -force golden_img.pkr.hcl 
-            '''    
-        }
     }
 
     stage('terraform init') {
