@@ -25,7 +25,7 @@ variable "rds_instance_properties" {
     username            = "admin"
     instance_class      = "db.t4g.micro"
     publicly_accessible = false
-    snapshot_identifier = "deijwordpressdb"
+    snapshot_identifier = "blogwordpressdb"
     skip_final_snapshot = true
   }
 } 
@@ -46,7 +46,7 @@ variable "tags" {
   description = "A map of tags to assign to resources"
   type        = map(string)
   default = {
-    Name        = "blog-deployment"
+    Name        = "blog-Deployment"
     stackTeam   = "stackcloud14"
     OwnerEmail  = "stackawsdeij@gmail.com"
     Environment = "dev"

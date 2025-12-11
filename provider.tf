@@ -1,17 +1,18 @@
 # Configure the AWS Provider
 provider "aws" {
-  region  = "us-east-1"
-  profile = "stack_prog_aut"
+  region = var.aws_region
 
   assume_role {
     role_arn     = "arn:aws:iam::${var.accounts[var.env]}:role/Engineer"
   }
 }
 
-# Configure the AWS Provider for management account
+# Configure the AWS Provider
 provider "aws" {
   alias  = "management"
-  region = "us-east-1"
+  region = var.aws_region
 
-  profile = "stack_prog" 
+  assume_role {
+    role_arn     = "arn:aws:iam::${var.accounts["mgmt"]}:role/stack_prog_aut"
+  }
 }

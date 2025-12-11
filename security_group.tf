@@ -1,57 +1,114 @@
-# Create the security group for the blog deployment
- resource "aws_security_group" "blog_sg" {
-  name        = var.sg_name
-  description = "This is the security group for the blog deployment"
-  vpc_id      = data.aws_vpc.selected.id
-  tags        = var.tags
+# Public SG (for bastion / web instances) - allows HTTP and SSH from internet
+resource "aws_security_group" "public_sg" {
+  name        = "${var.project_name}-public-sg"
+  description = "Allow SSH/HTTP from Internet"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.my_public_ip.response_body)}/32"]
+  }
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "Allow all outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.project_name}-public-sg" }
 }
 
-resource "aws_security_group_rule" "sg_rules" {
+# App/Private SG - instances in private subnets (e.g. app servers)
+resource "aws_security_group" "app_sg" {
+  name        = "${var.project_name}-app-sg"
+  description = "Security group for application servers (private subnets)"
+  vpc_id      = aws_vpc.this.id
 
-  # Convert the list into a map where the key is the description of the rule
-  for_each = { for rule in var.security_group_rules : rule.description => rule }
-  security_group_id = aws_security_group.blog_sg.id
-  # Access individual attributes of the current rule using 'each.value'
-  type        = each.value.type
-  from_port   = each.value.from_port
-  to_port     = each.value.to_port
-  protocol    = each.value.protocol
-  cidr_blocks = each.value.cidr_blocks
-  description = each.value.description
+  # Allow SSH from admin CIDR (optional). For now only allow SSH from public SG (bastion).
+  ingress {
+    description     = "SSH from bastion and admin"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.public_sg.id]
+  }
+
+  # Allow HTTP from public SG
+  ingress {
+    description = "HTTP from the public subnet"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    security_groups = [aws_security_group.public_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.project_name}-app-sg" }
 }
 
-resource "aws_security_group_rule" "ssh_rule" {
-  for_each = { for rule in var.security_group_rules : rule.description => rule if rule.description == "Allow SSH from VPC only" }
-  security_group_id = aws_security_group.blog_sg.id
-  # Access individual attributes of the current rule using 'each.value'
-  type        = each.value.type
-  from_port   = each.value.from_port
-  to_port     = each.value.to_port
-  protocol    = each.value.protocol
-  cidr_blocks = ["${chomp(data.http.my_public_ip.response_body)}/32"]
-  description = each.value.description
+# RDS SG - allows DB traffic from app_sg
+resource "aws_security_group" "rds_sg" {
+  name        = "${var.project_name}-rds-sg"
+  description = "Allow DB access from app servers"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description     = "DB access from App servers"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.project_name}-rds-sg" }
 }
 
-resource "aws_security_group_rule" "rds_rule" {
-  for_each = { for rule in var.security_group_rules : rule.description => rule if rule.description == "Allow RDS access from VPC" }
-  security_group_id = aws_security_group.blog_sg.id
-  # Access individual attributes of the current rule using 'each.value'
-  type        = each.value.type
-  from_port   = each.value.from_port
-  to_port     = each.value.to_port
-  protocol    = each.value.protocol
-  cidr_blocks = [data.aws_vpc.selected.cidr_block]
-  description = each.value.description
-}
+# EFS SG - allow NFS from app servers (or other instances in private subnets)
+resource "aws_security_group" "efs_sg" {
+  name        = "${var.project_name}-efs-sg"
+  description = "Allow NFS (EFS) traffic from app servers"
+  vpc_id      = aws_vpc.this.id
 
-resource "aws_security_group_rule" "efs_rule" {
-  for_each = { for rule in var.security_group_rules : rule.description => rule if rule.description == "Allow EFS access from VPC" }
-  security_group_id = aws_security_group.blog_sg.id
-  # Access individual attributes of the current rule using 'each.value'
-  type        = each.value.type
-  from_port   = each.value.from_port
-  to_port     = each.value.to_port
-  protocol    = each.value.protocol
-  cidr_blocks = [data.aws_vpc.selected.cidr_block]
-  description = each.value.description
+  ingress {
+    description     = "NFS from App servers"
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.project_name}-efs-sg" }
 }
